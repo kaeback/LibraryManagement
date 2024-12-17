@@ -11,7 +11,7 @@ import java.util.List;
 @Entity
 @Table(name = "MEMBER")
 @Getter @Setter @ToString
-public class Member {
+public class Member extends BaseEntity {
     @Column(name = "MEMBER_ID")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,7 +19,13 @@ public class Member {
     private String name;
     private String email;
 
-    @OneToMany(mappedBy = "member")
+    @Embedded
+    private Address address;
+
+    @OneToMany(
+            mappedBy = "member",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
     @ToString.Exclude  // 순환참조 문제 해결
     private List<Loan> loans = new ArrayList<>();
 }

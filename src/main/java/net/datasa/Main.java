@@ -5,6 +5,8 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 public class Main {
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("library_pu");
@@ -17,6 +19,12 @@ public class Main {
 //        member1.setId(1L);
         member1.setName("홍길동");
         member1.setEmail("hong@gmail.com");
+        Address address = new Address("서울", "강남대로 123", "12345");
+        member1.setAddress(address);
+        member1.setCreatedBy("admin");
+        member1.setCreatedAt(LocalDateTime.now());
+        member1.setUpdatedBy("admin");
+        member1.setUpdatedAt(LocalDateTime.now());
 
         entityManager.getTransaction().begin();
 
@@ -164,6 +172,53 @@ public class Main {
         entityManager.getTransaction().commit();
     }
 
+    public void bookPersist2() {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+
+        Ebook ebook = new Ebook();
+        ebook.setTitle("JPA 프로그래밍");
+        ebook.setIsbn("1234");
+        ebook.setStock(10);
+        ebook.setDownloadUrl("http://ebook.com/1234");
+        ebook.setSize(1024L);
+
+        PrintedBook printedBook = new PrintedBook();
+        printedBook.setTitle("Spring 프로그래밍");
+        printedBook.setIsbn("5678");
+        printedBook.setStock(20);
+        printedBook.setPages(300);
+
+        entityManager.persist(ebook);
+        entityManager.persist(printedBook);
+
+        entityManager.getTransaction().commit();
+    }
+
+    public void testNPlusOne() {
+        System.out.println("testNPlusOne start");
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+
+        // 모든 회원 조회
+//        List<Member> members = entityManager.createQuery("SELECT m FROM Member m", Member.class).getResultList();
+//        List<Member> members = entityManager.createQuery("SELECT m FROM Member m JOIN FETCH m.loans", Member.class).getResultList();
+        List<Member> members = entityManager.createQuery(
+                "SELECT m FROM Member m JOIN FETCH m.loans l JOIN FETCH l.book", Member.class).getResultList();
+
+//         각 회원의 대출 정보 조회
+        for (Member member : members) {
+            System.out.println("Member: " + member.getName());
+            for (Loan loan : member.getLoans()) {
+                System.out.println("  Loan: " + loan.getBook().getTitle());
+            }
+        }
+
+        entityManager.getTransaction().commit();
+        entityManager.close();
+        System.out.println("testNPlusOne end");
+    }
+
     public static void main(String[] args) {
         Main main = new Main();
         // CRUD
@@ -173,16 +228,20 @@ public class Main {
 //        main.remove();
 
         // 책 등록
-        main.bookPersist();
+//        main.bookPersist();
+        main.bookPersist2();
 
         // 대출 정보 등록
         main.loanPersist();
 
         // 대출 정보 조회
-        main.loanFind();
+//        main.loanFind();
 
         // 회원이 빌린 책 조회
-        main.memberLoanFind();
+//        main.memberLoanFind();
+
+        // N+1 문제
+        main.testNPlusOne();
 
     }
 
