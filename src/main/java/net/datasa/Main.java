@@ -219,20 +219,92 @@ public class Main {
         System.out.println("testNPlusOne end");
     }
 
+    // Main.java
+    public void testCascadeAndOrphanRemoval() {
+        System.out.println("testCascadeAndOrphanRemoval start");
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+
+        // 새로운 회원 생성
+        Member member = new Member();
+        member.setName("John Doe");
+        member.setEmail("john.doe@example.com");
+
+        // 대출 정보 생성 및 회원과 연관 설정
+        Loan loan1 = new Loan();
+        loan1.setBook(entityManager.find(Book.class, 1L));
+        loan1.setLoanDate(LocalDate.now());
+        loan1.setStatus(LoanStatus.LOAN);
+        loan1.setReturnDate(LocalDate.now().plusDays(14));
+        loan1.setMember(member);
+
+        Loan loan2 = new Loan();
+        loan2.setBook(entityManager.find(Book.class, 2L));
+        loan2.setLoanDate(LocalDate.now());
+        loan2.setStatus(LoanStatus.LOAN);
+        loan2.setReturnDate(LocalDate.now().plusDays(7));
+        loan2.setMember(member);
+
+        member.getLoans().add(loan1);
+        member.getLoans().add(loan2);
+
+        // 회원 저장 (대출 정보도 함께 저장됨)
+        entityManager.persist(member);
+        entityManager.getTransaction().commit();
+        entityManager.close();
+        System.out.println("testCascadeAndOrphanRemoval end");
+    }
+
+    // Main.java
+    public void testOrphanRemoval() {
+        System.out.println("testOrphanRemoval start");
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+
+        // 회원 조회
+        Member member = entityManager.find(Member.class, 1L);
+
+        // 회원의 대출 정보 중 하나를 제거
+        Loan loanToRemove = member.getLoans().get(0);
+        member.getLoans().remove(loanToRemove);
+
+        // 대출 정보(고아 객체)가 자동으로 데이터베이스에서 제거됨
+        entityManager.getTransaction().commit();
+        entityManager.close();
+        System.out.println("testOrphanRemoval end");
+    }
+
+    // Main.java
+    public void testCascadeDelete() {
+        System.out.println("testCascadeDelete start");
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+
+        // 회원 조회
+        Member member = entityManager.find(Member.class, 1L);
+
+        // 회원 제거 (대출 정보도 함께 제거됨)
+        entityManager.remove(member);
+
+        entityManager.getTransaction().commit();
+        entityManager.close();
+        System.out.println("testCascadeDelete end");
+    }
+
     public static void main(String[] args) {
         Main main = new Main();
         // CRUD
-        main.persist();
+//        main.persist();
 //        main.find();
 //        main.update();
 //        main.remove();
 
         // 책 등록
 //        main.bookPersist();
-        main.bookPersist2();
+//        main.bookPersist2();
 
         // 대출 정보 등록
-        main.loanPersist();
+//        main.loanPersist();
 
         // 대출 정보 조회
 //        main.loanFind();
@@ -241,8 +313,12 @@ public class Main {
 //        main.memberLoanFind();
 
         // N+1 문제
-        main.testNPlusOne();
+//        main.testNPlusOne();
 
+        // Cascade, Orphan Removal
+        main.testCascadeAndOrphanRemoval();
+        main.testOrphanRemoval();
+        main.testCascadeDelete();
     }
 
 }
