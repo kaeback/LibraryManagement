@@ -291,20 +291,78 @@ public class Main {
         System.out.println("testCascadeDelete end");
     }
 
+    public void findAllMembers() {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+
+        List<Member> members = entityManager.createQuery("SELECT m FROM Member m", Member.class).getResultList();
+        for (Member member : members) {
+            System.out.println("Member: " + member);
+        }
+
+        entityManager.getTransaction().commit();
+        entityManager.close();
+    }
+
+    public void findMembersByName(String name) {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+
+        List<Member> members = entityManager.createQuery("SELECT m FROM Member m WHERE m.name = :name", Member.class)
+                .setParameter("name", name)
+                .getResultList();
+        for (Member member : members) {
+            System.out.println("Member: " + member);
+        }
+
+        entityManager.getTransaction().commit();
+        entityManager.close();
+    }
+
+    public void findAllMembersSortedByName() {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+
+        List<Member> members = entityManager.createQuery("SELECT m FROM Member m ORDER BY m.name ASC", Member.class).getResultList();
+        for (Member member : members) {
+            System.out.println("Member: " + member);
+        }
+
+        entityManager.getTransaction().commit();
+        entityManager.close();
+    }
+
+    public void findMembersWithLoans() {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+
+//        List<Member> members = entityManager.createQuery("SELECT m FROM Member m JOIN m.loans l JOIN l.book", Member.class).getResultList();
+        List<Member> members = entityManager.createQuery("SELECT m FROM Member m JOIN FETCH m.loans l JOIN FETCH l.book", Member.class).getResultList();
+        for (Member member : members) {
+            System.out.println("Member: " + member);
+            for (Loan loan : member.getLoans()) {
+                System.out.println("  Loan: " + loan);
+            }
+        }
+
+        entityManager.getTransaction().commit();
+        entityManager.close();
+    }
+
     public static void main(String[] args) {
         Main main = new Main();
         // CRUD
-//        main.persist();
+        main.persist();
 //        main.find();
 //        main.update();
 //        main.remove();
 
         // 책 등록
-//        main.bookPersist();
-//        main.bookPersist2();
+        main.bookPersist();
+        main.bookPersist2();
 
         // 대출 정보 등록
-//        main.loanPersist();
+        main.loanPersist();
 
         // 대출 정보 조회
 //        main.loanFind();
@@ -316,9 +374,14 @@ public class Main {
 //        main.testNPlusOne();
 
         // Cascade, Orphan Removal
-        main.testCascadeAndOrphanRemoval();
-        main.testOrphanRemoval();
-        main.testCascadeDelete();
+//        main.testCascadeAndOrphanRemoval();
+//        main.testOrphanRemoval();
+//        main.testCascadeDelete();
+
+//        main.findAllMembers();
+//        main.findMembersByName("홍길동");
+//        main.findAllMembersSortedByName();
+        main.findMembersWithLoans();
     }
 
 }
