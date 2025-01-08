@@ -195,6 +195,47 @@ public class Main {
         entityManager.getTransaction().commit();
     }
 
+    public void testProxy() {
+        System.out.println("testProxy start");
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+
+        // 데이터 저장
+        Member member = new Member();
+        member.setName("홍길동");
+        entityManager.persist(member);
+
+        Book book = new Book();
+        book.setTitle("JPA 프로그래밍");
+        entityManager.persist(book);
+
+        Loan loan = new Loan();
+        loan.setMember(member);
+        loan.setBook(book);
+        entityManager.persist(loan);
+
+        entityManager.getTransaction().commit();
+        entityManager.clear();
+
+        // 프록시 생성
+        Loan foundLoan = entityManager.find(Loan.class, loan.getId());
+        System.out.println("프록시 객체 생성");
+        Member proxyMember = foundLoan.getMember(); // 프록시 객체 생성
+        System.out.println(proxyMember.getClass()); // 프록시 객체 클래스 이름 출력
+
+        // 프록시 객체 초기화 (데이터베이스 조회 발생)
+        System.out.println("Member 프록시 객체 초기화");
+        System.out.println(proxyMember.getName()); // 이 시점에 실제 쿼리 실행
+
+        Book proxyBook = foundLoan.getBook(); // 프록시 객체 생성
+        System.out.println(proxyBook.getClass()); // 프록시 객체 클래스 이름 출력
+
+        System.out.println("Book 프록시 객체 초기화");
+        System.out.println(proxyBook.getTitle()); // 이 시점에 실제 쿼리 실행
+
+        System.out.println("testProxy end");
+    }
+
     public void testNPlusOne() {
         System.out.println("testNPlusOne start");
         EntityManager entityManager = entityManagerFactory.createEntityManager();
@@ -202,9 +243,9 @@ public class Main {
 
         // 모든 회원 조회
 //        List<Member> members = entityManager.createQuery("SELECT m FROM Member m", Member.class).getResultList();
-//        List<Member> members = entityManager.createQuery("SELECT m FROM Member m JOIN FETCH m.loans", Member.class).getResultList();
-        List<Member> members = entityManager.createQuery(
-                "SELECT m FROM Member m JOIN FETCH m.loans l JOIN FETCH l.book", Member.class).getResultList();
+        List<Member> members = entityManager.createQuery("SELECT m FROM Member m JOIN FETCH m.loans", Member.class).getResultList();
+//        List<Member> members = entityManager.createQuery(
+//                "SELECT m FROM Member m JOIN FETCH m.loans l JOIN FETCH l.book", Member.class).getResultList();
 
 //         각 회원의 대출 정보 조회
         for (Member member : members) {
@@ -294,17 +335,17 @@ public class Main {
     public static void main(String[] args) {
         Main main = new Main();
         // CRUD
-//        main.persist();
+        main.persist();
 //        main.find();
 //        main.update();
 //        main.remove();
 
         // 책 등록
-//        main.bookPersist();
+        main.bookPersist();
 //        main.bookPersist2();
 
         // 대출 정보 등록
-//        main.loanPersist();
+        main.loanPersist();
 
         // 대출 정보 조회
 //        main.loanFind();
@@ -312,13 +353,19 @@ public class Main {
         // 회원이 빌린 책 조회
 //        main.memberLoanFind();
 
+        // 상속관계 매핑
+//        main.bookPersist2();
+
+        // 프록시
+//        main.testProxy();
+
         // N+1 문제
-//        main.testNPlusOne();
+        main.testNPlusOne();
 
         // Cascade, Orphan Removal
-        main.testCascadeAndOrphanRemoval();
-        main.testOrphanRemoval();
-        main.testCascadeDelete();
+//        main.testCascadeAndOrphanRemoval();
+//        main.testOrphanRemoval();
+//        main.testCascadeDelete();
     }
 
 }
